@@ -35,4 +35,23 @@ class InformationController extends Controller
             return response(["message" => $e->getMessage()], 500);
         }
     }
+
+    public function downlaod(){
+        try {            
+            $response = $this->informationService->downlaod();            
+            return response($response, 201);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return response(["message" => $e->getMessage()], 500);
+        }
+    }
+    public function upload(){
+        try {            
+            $response = $this->informationService->upload();            
+            return response($response, 201);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return response(["message" => $e->getMessage()], 500);
+        }
+    }
 }

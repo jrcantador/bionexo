@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Repositories\InformationRepository;
+use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\Remote\LocalFileDetector;
+use Facebook\WebDriver\Firefox\FirefoxOptions;
+
 
 class InformationService
 {
@@ -33,8 +36,8 @@ class InformationService
     {
         $serverUrl = 'http://selenium-hub:4444/';
         $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
-        try {            
-            $driver->get('https://testpages.herokuapp.com/styled/basic-html-form-test.html');            
+        try {
+            $driver->get('https://testpages.herokuapp.com/styled/basic-html-form-test.html');
             $driver->findElement(WebDriverBy::name('username'))->click()->clear()->sendKeys('Junior'); // fill the search box                        
             $driver->findElement(WebDriverBy::name('password'))->click()->clear()->sendKeys('123456'); // fill the search box
             $driver->findElement(WebDriverBy::name('comments'))->click()->clear()->sendKeys('Teste teste teste');
@@ -76,7 +79,7 @@ class InformationService
     {
         $serverUrl = 'http://selenium-hub:4444/';
         $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
-        try {          
+        try {
             $driver->get('https://testpages.herokuapp.com/styled/tag/table.html');
             $trs = $driver->findElement(WebDriverBy::id('mytable'))->findElements(WebDriverBy::tagName("tr"));
             foreach ($trs as $key => $tr) {
@@ -88,15 +91,48 @@ class InformationService
                 if (count($info) > 0) {
                     $data[] = $this->informationRepository->create($info);
                 }
-            }            
+            }
             return $data;
         } finally {
             $driver->quit();
-        }       
+        }
     }
 
-    public function delete(int $id)
+    public function downlaod()
     {
-        $this->informationRepository->create($id);
+        $serverUrl = 'http://selenium-hub:4444/';
+        $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
+        try {
+            \Log::error($_SERVER['DOCUMENT_ROOT']);
+            $driver->get('https://testpages.herokuapp.com/files/textfile.txt');
+            $fileText = $driver->findElement(WebDriverBy::tagName('pre'))->getText();
+            $fp = fopen($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt","wb");
+            fwrite($fp,$fileText);
+            fclose($fp);      
+            return "Concluido";
+        } finally {
+            $driver->quit();
+        }
+    }
+
+    public function upload()
+    {
+        $serverUrl = 'http://selenium-hub:4444/';
+        $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
+        try {
+            $driver->get('https://testpages.herokuapp.com/styled/file-upload-test.html');                       
+            $fileInput = $driver->findElement(WebDriverBy::id('fileinput'));
+            $fileInput->setFileDetector(new LocalFileDetector());           
+            $fileInput->sendKeys($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt");
+            $driver->findElement(WebDriverBy::id('itsafile'))->click();
+            $driver->findElement(WebDriverBy::id('itsafile'))->click()->submit();
+
+            $result = $driver->findElement(WebDriverBy::tagName("body"))->getDomProperty("innerHTML");
+            return $result;
+
+            return "Concluido";
+        } finally {
+            $driver->quit();
+        }
     }
 }
