@@ -7,12 +7,36 @@ services:
       context: ./docker/php
       dockerfile: Dockerfile
     restart: unless-stopped
+    environment:
+      XDEBUG_CONFIG: remote_host=172.17.0.1 #docker network ip.
+      PHP_IDE_CONFIG: "serverName=xdebug-docker"
     tty: true
     volumes:
       - ./demo:/var/www
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
-      - setup-network
+      - setup-network  
+
+  selenium-hub:
+    image: selenium/hub:4.10.0-20230607
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+    networks:
+      - setup-network  
+  chrome:
+    image: selenium/node-chrome:4.10.0-20230607
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    networks:
+      - setup-network 
 
   nginx:
     container_name: setup-nginx
