@@ -15,10 +15,10 @@ class InformationController extends Controller
         $this->informationService = $informationService;
     }
 
-    public function save(Request $request)
+    public function saveInfosTable(Request $request)
     {
         try {            
-            $response = $this->informationService->create($request->all());            
+            $response = $this->informationService->saveInfosTable($request->all());            
             return response($response, 201);
         } catch (\Exception $e) {
             \Log::error($e->getMessage());
@@ -26,9 +26,9 @@ class InformationController extends Controller
         }
     }
 
-    public function setDocument(){
+    public function setForm(){
         try {            
-            $response = $this->informationService->setDocument();            
+            $response = $this->informationService->setForm();            
             return response($response, 201);
         } catch (\Exception $e) {
             \Log::error($e->getMessage());

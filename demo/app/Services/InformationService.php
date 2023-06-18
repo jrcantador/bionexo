@@ -3,13 +3,10 @@
 namespace App\Services;
 
 use App\Repositories\InformationRepository;
-use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\Remote\LocalFileDetector;
-use Facebook\WebDriver\Firefox\FirefoxOptions;
-
 
 class InformationService
 {
@@ -32,7 +29,7 @@ class InformationService
         return $this->informationRepository->update($id, $data);
     }
 
-    public function setDocument()
+    public function setForm()
     {
         $serverUrl = 'http://selenium-hub:4444/';
         $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
@@ -75,7 +72,7 @@ class InformationService
         }
     }
 
-    public function create()
+    public function saveInfosTable()
     {
         $serverUrl = 'http://selenium-hub:4444/';
         $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());

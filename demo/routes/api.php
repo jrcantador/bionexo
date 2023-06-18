@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('informations', ['uses' => 'App\Http\Controllers\InformationController@save']);
 Route::post('informations/download', ['uses' => 'App\Http\Controllers\InformationController@downlaod']);
 Route::post('informations/upload', ['uses' => 'App\Http\Controllers\InformationController@upload']);
-Route::get('informations/document', ['uses' => 'App\Http\Controllers\InformationController@setDocument']);
+Route::post('informations/document', ['uses' => 'App\Http\Controllers\InformationController@setDocument']);
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
