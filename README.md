@@ -88,3 +88,10 @@ Após terminar a instalação, executar o comando para rodar os scripts no banco
 ```bash
 php artisan migrate
 ```
+
+
+Por fim, executar comando abaixo para gerar um link a pasta pública
+
+```bash
+php artisan storage:link
+```

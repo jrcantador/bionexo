@@ -7,9 +7,7 @@ use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\Remote\LocalFileDetector;
-use League\CommonMark\Delimiter\Delimiter;
 use Smalot\PdfParser\Parser;
-use Smalot\PdfParser\Config;
 
 class InformationService
 {
@@ -105,10 +103,10 @@ class InformationService
         try {
             $driver->get('https://testpages.herokuapp.com/files/textfile.txt');
             $fileText = $driver->findElement(WebDriverBy::tagName('pre'))->getText();
-            $fp = fopen($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt", "wb");
+            $fp = fopen("storage/Teste TKS.txt", "wb");
             fwrite($fp, $fileText);
             fclose($fp);
-            return "Concluido";
+            return "Arquivo criado em " . url("storage/Teste TKS.txt");
         } finally {
             $driver->quit();
         }
@@ -122,14 +120,12 @@ class InformationService
             $driver->get('https://testpages.herokuapp.com/styled/file-upload-test.html');
             $fileInput = $driver->findElement(WebDriverBy::id('fileinput'));
             $fileInput->setFileDetector(new LocalFileDetector());
-            $fileInput->sendKeys($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt");
+            $fileInput->sendKeys("storage/Teste TKS.txt");
             $driver->findElement(WebDriverBy::id('itsafile'))->click();
             $driver->findElement(WebDriverBy::id('itsafile'))->click()->submit();
 
             $result = $driver->findElement(WebDriverBy::tagName("body"))->getDomProperty("innerHTML");
             return $result;
-
-            return "Concluido";
         } finally {
             $driver->quit();
         }
