@@ -54,4 +54,13 @@ class InformationController extends Controller
             return response(["message" => $e->getMessage()], 500);
         }
     }
+    public function readPdf(){
+        try {            
+            $response = $this->informationService->readPdf();            
+            return response($response, 201);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return response(["message" => $e->getMessage()], 500);
+        }
+    }
 }

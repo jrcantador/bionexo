@@ -7,6 +7,9 @@ use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\Remote\LocalFileDetector;
+use League\CommonMark\Delimiter\Delimiter;
+use Smalot\PdfParser\Parser;
+use Smalot\PdfParser\Config;
 
 class InformationService
 {
@@ -103,9 +106,9 @@ class InformationService
             \Log::error($_SERVER['DOCUMENT_ROOT']);
             $driver->get('https://testpages.herokuapp.com/files/textfile.txt');
             $fileText = $driver->findElement(WebDriverBy::tagName('pre'))->getText();
-            $fp = fopen($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt","wb");
-            fwrite($fp,$fileText);
-            fclose($fp);      
+            $fp = fopen($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt", "wb");
+            fwrite($fp, $fileText);
+            fclose($fp);
             return "Concluido";
         } finally {
             $driver->quit();
@@ -117,9 +120,9 @@ class InformationService
         $serverUrl = 'http://selenium-hub:4444/';
         $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
         try {
-            $driver->get('https://testpages.herokuapp.com/styled/file-upload-test.html');                       
+            $driver->get('https://testpages.herokuapp.com/styled/file-upload-test.html');
             $fileInput = $driver->findElement(WebDriverBy::id('fileinput'));
-            $fileInput->setFileDetector(new LocalFileDetector());           
+            $fileInput->setFileDetector(new LocalFileDetector());
             $fileInput->sendKeys($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt");
             $driver->findElement(WebDriverBy::id('itsafile'))->click();
             $driver->findElement(WebDriverBy::id('itsafile'))->click()->submit();
@@ -131,5 +134,118 @@ class InformationService
         } finally {
             $driver->quit();
         }
+    }
+
+    public function readPdf()
+    {
+        $parser = new Parser();
+        $pdf = $parser->parseFile('storage/Leitura PDF.PDF');
+        $pages = $pdf->getPages();
+        $headRegex =  '/^\d{1,2} - /';
+        $infos = [];
+
+        $test = $pages[0]->getDataTm();
+
+        foreach ($pages as $index => $page) {
+            array_push($infos, array_map(function ($row) use ($index, $headRegex) {
+                return [
+                    "page" => $index,
+                    "x" => floatval($row[0][4]),
+                    "y" => floatval($row[0][5]),
+                    "value" => $row[1],
+                    "id" => preg_match($headRegex,  $row[1]) ? "head" : "value"
+                ];
+            }, $page->getDataTm()));
+        }
+
+        $heads = [];
+        foreach ($infos as $key => $infosPages) {
+            array_push($heads, array_filter($infosPages, function ($info) {
+                return $info['id'] == "head";
+            }));
+        }
+
+        $values = [];
+        foreach ($infos as $key => $infosPages) {
+            array_push($values, array_filter($infosPages, function ($info) {
+                return  $info['id'] == "value";
+            }));
+        }
+
+        $data = [];
+        foreach ($heads[0] as $head) {
+            $value = $this->closerElement($head, $values[0]);
+            $data[] = [
+                "head" => $head["value"],
+                "value" => $value["value"]
+            ];
+        }
+
+
+        $csvFile = 'storage/arquivo.csv';
+        $csvHandler = fopen($csvFile, 'w');
+
+        $finalHead = array_unique(array_map(function ($head) {
+            return $head["value"];
+        }, $heads[0]));
+
+        fputcsv($csvHandler, $finalHead);
+
+        $finalInfos = [];
+        foreach ($finalHead as $head) {
+            $row = [];
+            foreach ($data as $value) {
+                if($head = $value["head"]){
+                    $row[] = $value["value"]; 
+                }                
+            }            
+            $finalInfos[] = $row;
+        }
+      
+        foreach ($finalInfos as $infos) {
+            fputcsv($csvHandler, $infos);
+        }
+                
+
+        fclose($csvHandler);
+
+        return $data;
+    }
+
+    private function closerElement($head, $values)
+    {
+        $closer = [];
+        foreach ($values as $value) {
+            if ($head["page"] == $value["page"]) {
+                if (
+                    $value["x"] < $head["x"]
+                ) {
+                    continue;
+                }
+
+                if (count($closer) == 0) {
+                    $closer = $value;
+                }
+
+
+                if (
+                    $this->getDistanceBetweenPointsNew($head["x"], $head["y"], $closer["x"], $closer["y"]) >
+                    $this->getDistanceBetweenPointsNew($value["x"], $value["y"], $closer["x"], $closer["y"])
+                ) {
+                    $closer = $value;
+                }
+            }
+        }
+        return $closer;
+    }
+
+    function getDistanceBetweenPointsNew($latitude1, $longitude1, $latitude2, $longitude2)
+    {
+        $theta = $longitude1 - $longitude2;
+        $distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta)));
+        $distance = acos($distance);
+        $distance = rad2deg($distance);
+        $distance = $distance * 60 * 1.1515;
+        return (round($distance, 2));
     }
 }

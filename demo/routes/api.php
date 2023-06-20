@@ -18,6 +18,7 @@ Route::post('informations', ['uses' => 'App\Http\Controllers\InformationControll
 Route::post('informations/download', ['uses' => 'App\Http\Controllers\InformationController@downlaod']);
 Route::post('informations/upload', ['uses' => 'App\Http\Controllers\InformationController@upload']);
 Route::post('informations/document', ['uses' => 'App\Http\Controllers\InformationController@setDocument']);
+Route::post('informations/pdf', ['uses' => 'App\Http\Controllers\InformationController@readPdf']);
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
