@@ -98,12 +98,11 @@ class InformationService
         }
     }
 
-    public function downlaod()
+    public function download()
     {
         $serverUrl = 'http://selenium-hub:4444/';
         $driver = RemoteWebDriver::create($serverUrl, DesiredCapabilities::chrome());
         try {
-            \Log::error($_SERVER['DOCUMENT_ROOT']);
             $driver->get('https://testpages.herokuapp.com/files/textfile.txt');
             $fileText = $driver->findElement(WebDriverBy::tagName('pre'))->getText();
             $fp = fopen($_SERVER['DOCUMENT_ROOT'] . "/Teste TKS.txt", "wb");
@@ -208,10 +207,6 @@ class InformationService
             }
             $finalInfos[] = $row;
         };
-
-        \Log::error($finalHead);
-        \Log::error($finalInfos);
-
         foreach ($finalInfos as $infos) {
             fputcsv($csvHandler, $infos);
         }

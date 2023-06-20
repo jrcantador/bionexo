@@ -36,9 +36,9 @@ class InformationController extends Controller
         }
     }
 
-    public function downlaod(){
+    public function download(){
         try {            
-            $response = $this->informationService->downlaod();            
+            $response = $this->informationService->download();            
             return response($response, 201);
         } catch (\Exception $e) {
             \Log::error($e->getMessage());
