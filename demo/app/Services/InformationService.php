@@ -160,22 +160,25 @@ class InformationService
 
         $heads = [];
         foreach ($infos as $key => $infosPages) {
-            array_push($heads, array_filter($infosPages, function ($info) {
+            $transform = array_filter($infosPages, function ($info) {
                 return $info['id'] == "head";
-            }));
+            });
+            $heads = array_merge($heads, $transform);
         }
 
         $values = [];
         foreach ($infos as $key => $infosPages) {
-            array_push($values, array_filter($infosPages, function ($info) {
+            $transform = array_filter($infosPages, function ($info) {
                 return  $info['id'] == "value";
-            }));
+            });
+            $values = array_merge($values, $transform);
         }
 
         $data = [];
-        foreach ($heads[0] as $head) {
-            $value = $this->closerElement($head, $values[0]);
+        foreach ($heads as $key => $head) {
+            $value = $this->closerElement($head, $values);
             $data[] = [
+                "page" => $value["page"],
                 "head" => $head["value"],
                 "value" => $value["value"]
             ];
@@ -187,25 +190,32 @@ class InformationService
 
         $finalHead = array_unique(array_map(function ($head) {
             return $head["value"];
-        }, $heads[0]));
+        }, $heads));
 
         fputcsv($csvHandler, $finalHead);
 
+
         $finalInfos = [];
-        foreach ($finalHead as $head) {
+        for ($i = 0; $i < count($pages); $i++) {
             $row = [];
-            foreach ($data as $value) {
-                if($head = $value["head"]){
-                    $row[] = $value["value"]; 
-                }                
-            }            
+            foreach ($finalHead as $head) {               
+                foreach ($data as $value) {
+                    if ($value["page"] == $i && $head == $value["head"]) {
+                        array_push($row, $value["value"]);
+                        break;
+                    }                   
+                }
+            }
             $finalInfos[] = $row;
-        }
-      
+        };
+
+        \Log::error($finalHead);
+        \Log::error($finalInfos);
+
         foreach ($finalInfos as $infos) {
             fputcsv($csvHandler, $infos);
         }
-                
+
 
         fclose($csvHandler);
 
