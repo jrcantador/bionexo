@@ -143,87 +143,106 @@ class InformationService
                 return  $row[1];
             }, $page->getDataTm()));
         }
-        $head = [];
-        $rows = [];
-        $row = [];
+        $heads = [
+            "1 - Registro ANS" => [],
+            "3 - Nome da Operadora" => [],
+            "4 - CNPJ da Operadora" => [],
+            "5 - Data de Emissão" => [],
+            "6 - Código na Operadora" => [],
+            "7 - Nome do Contratado" => [],
+            "8 - Código CNES" => [],
+            "9 - Número do Lote" => [],
+            "10 - Nº do Protocolo (Processo)" => [],
+            "11- Data do Protocolo" => [],
+            "12 - Código da Glosa do Protocolo" => []
+        ];
+
         foreach ($infos as $key => $info) {
-           
             $padrao = "/1 - Registro ANS/";
             if (preg_match($padrao, $info)) {
-                $head[] = "1 - Registro ANS";
-                $row[] = $infos[$key + 1];                
+                $heads["1 - Registro ANS"][] = $infos[$key + 1];
                 continue;
             }
 
             $padrao = "/3 - Nome da Operadora/";
             if (preg_match($padrao, $info)) {
-                $head[] = "3 - Nome da Operadora";
-                $row[] = $infos[$key + 1];
+                $heads["3 - Nome da Operadora"][] =
+                    $row[] = $infos[$key + 1];
                 continue;
             }
 
             $padrao = "/4 - CNPJ da Operadora/";
             if (preg_match($padrao, $info)) {
-                $head[] = "4 - CNPJ da Operadora";
-                $row[] = $infos[$key + 1];
+                $heads["4 - CNPJ da Operadora"][] = $infos[$key + 1];
                 continue;
             }
 
             $padrao = "/TOTAL GERAL/";
             if (preg_match($padrao, $info)) {
-                $head[] = "5 - Data de Emissão";
-                $row[] = $infos[$key + 1];
+                $heads["5 - Data de Emissão"][] = $infos[$key + 1];
                 continue;
             }
 
             $padrao = "/6 - Código na Operadora/";
             if (preg_match($padrao, $info)) {
-                $head[] = "6 - Código na Operadora";
-                $row[] = $infos[$key - 1];
+                $heads["6 - Código na Operadora"][] = $infos[$key - 1];
                 continue;
             }
 
             $padrao = "/7 - Nome do Contratado/";
             if (preg_match($padrao, $info)) {
-                $head[] = "7 - Nome do Contratado";
-                $row[] = $infos[$key - 1];
+                $heads["7 - Nome do Contratado"][] = $infos[$key - 1];
                 continue;
             }
 
             $padrao = "/8 - Código CNES/";
             if (preg_match($padrao, $info)) {
-                $head[] = "9 - Número do Lote";
-                $row[] = $infos[$key + 1];
+                $heads["9 - Número do Lote"][] = $infos[$key + 1];
                 continue;
             }
             $padrao = "/9 - Número do Lote/";
             if (preg_match($padrao, $info)) {
-                $head[] = "10 - Nº do Protocolo (Processo)";
-                $row[] = $infos[$key + 1];
+                $heads["10 - Nº do Protocolo (Processo)"][] = $infos[$key + 1];
                 continue;
             }
 
             $padrao = "/10 - Nº do Protocolo/";
             if (preg_match($padrao, $info)) {
-                $head[] = "11- Data do Protocolo";
-                $row[] = $infos[$key + 1];
+                $heads["11- Data do Protocolo"][] = $infos[$key + 1];
                 continue;
             }
 
             $padrao = "/12 - Código da Glosa do Protocolo/";
-            if (preg_match($padrao, $info)) {                
-                $head[] = "8 - Código CNES";
-                $head[] = "12 - Código da Glosa do Protocolo";
-                $row[] = $infos[$key + 1];
-                $row[] = $infos[$key + 2];            
+            if (preg_match($padrao, $info)) {
+                $heads["8 - Código CNES"][] = $infos[$key + 1];
+                $heads["12 - Código da Glosa do Protocolo"][] = $infos[$key + 2];
                 continue;
-            }           
+            }
         }
 
 
         $file = fopen("storage/file.csv", "w");
-        fputcsv($file, $head, ",");
-        fputcsv($file, $row, ",");
+        fputcsv($file, array_keys($heads), ",");
+
+        $countRows = 0;
+        foreach ($heads as $key => $head) {
+            $countRows += count($head);
+        }
+        $countRows = $countRows / count($heads);
+
+        $rows = [];
+        for ($i = 0; $i  < $countRows; $i++) {
+            $row = [];
+            foreach ($heads as $key => $head) {
+                $row[] = $head[$i];
+            }
+            $rows[] = $row;
+        }
+
+        foreach ($rows as $row) {
+            fputcsv($file, $row, ",");
+        }
+
         fclose($file);
 
         return "Concluído";
