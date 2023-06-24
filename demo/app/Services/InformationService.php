@@ -136,117 +136,96 @@ class InformationService
         $parser = new Parser();
         $pdf = $parser->parseFile('storage/Leitura PDF.PDF');
         $pages = $pdf->getPages();
-        $headRegex =  '/^\d{1,2} - /';
         $infos = [];
 
-        $test = $pages[0]->getDataTm();
-
-        foreach ($pages as $index => $page) {
-            array_push($infos, array_map(function ($row) use ($index, $headRegex) {
-                return [
-                    "page" => $index,
-                    "x" => floatval($row[0][4]),
-                    "y" => floatval($row[0][5]),
-                    "value" => $row[1],
-                    "id" => preg_match($headRegex,  $row[1]) ? "head" : "value"
-                ];
+        foreach ($pages as $page) {
+            $infos = array_merge($infos, array_map(function ($row) {
+                return  $row[1];
             }, $page->getDataTm()));
         }
-
-        $heads = [];
-        foreach ($infos as $key => $infosPages) {
-            $transform = array_filter($infosPages, function ($info) {
-                return $info['id'] == "head";
-            });
-            $heads = array_merge($heads, $transform);
-        }
-
-        $values = [];
-        foreach ($infos as $key => $infosPages) {
-            $transform = array_filter($infosPages, function ($info) {
-                return  $info['id'] == "value";
-            });
-            $values = array_merge($values, $transform);
-        }
-
-        $data = [];
-        foreach ($heads as $key => $head) {
-            $value = $this->closerElement($head, $values);
-            $data[] = [
-                "page" => $value["page"],
-                "head" => $head["value"],
-                "value" => $value["value"]
-            ];
-        }
-
-
-        $csvFile = 'storage/arquivo.csv';
-        $csvHandler = fopen($csvFile, 'w');
-
-        $finalHead = array_unique(array_map(function ($head) {
-            return $head["value"];
-        }, $heads));
-
-        fputcsv($csvHandler, $finalHead);
-
-
-        $finalInfos = [];
-        for ($i = 0; $i < count($pages); $i++) {
-            $row = [];
-            foreach ($finalHead as $head) {               
-                foreach ($data as $value) {
-                    if ($value["page"] == $i && $head == $value["head"]) {
-                        array_push($row, $value["value"]);
-                        break;
-                    }                   
-                }
+        $head = [];
+        $rows = [];
+        $row = [];
+        foreach ($infos as $key => $info) {
+           
+            $padrao = "/1 - Registro ANS/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "1 - Registro ANS";
+                $row[] = $infos[$key + 1];                
+                continue;
             }
-            $finalInfos[] = $row;
-        };
-        foreach ($finalInfos as $infos) {
-            fputcsv($csvHandler, $infos);
-        }
 
-
-        fclose($csvHandler);
-
-        return $data;
-    }
-
-    private function closerElement($head, $values)
-    {
-        $closer = [];
-        foreach ($values as $value) {
-            if ($head["page"] == $value["page"]) {
-                if (
-                    $value["x"] < $head["x"]
-                ) {
-                    continue;
-                }
-
-                if (count($closer) == 0) {
-                    $closer = $value;
-                }
-
-
-                if (
-                    $this->getDistanceBetweenPointsNew($head["x"], $head["y"], $closer["x"], $closer["y"]) >
-                    $this->getDistanceBetweenPointsNew($value["x"], $value["y"], $closer["x"], $closer["y"])
-                ) {
-                    $closer = $value;
-                }
+            $padrao = "/3 - Nome da Operadora/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "3 - Nome da Operadora";
+                $row[] = $infos[$key + 1];
+                continue;
             }
-        }
-        return $closer;
-    }
 
-    function getDistanceBetweenPointsNew($latitude1, $longitude1, $latitude2, $longitude2)
-    {
-        $theta = $longitude1 - $longitude2;
-        $distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta)));
-        $distance = acos($distance);
-        $distance = rad2deg($distance);
-        $distance = $distance * 60 * 1.1515;
-        return (round($distance, 2));
+            $padrao = "/4 - CNPJ da Operadora/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "4 - CNPJ da Operadora";
+                $row[] = $infos[$key + 1];
+                continue;
+            }
+
+            $padrao = "/TOTAL GERAL/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "5 - Data de Emissão";
+                $row[] = $infos[$key + 1];
+                continue;
+            }
+
+            $padrao = "/6 - Código na Operadora/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "6 - Código na Operadora";
+                $row[] = $infos[$key - 1];
+                continue;
+            }
+
+            $padrao = "/7 - Nome do Contratado/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "7 - Nome do Contratado";
+                $row[] = $infos[$key - 1];
+                continue;
+            }
+
+            $padrao = "/8 - Código CNES/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "9 - Número do Lote";
+                $row[] = $infos[$key + 1];
+                continue;
+            }
+            $padrao = "/9 - Número do Lote/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "10 - Nº do Protocolo (Processo)";
+                $row[] = $infos[$key + 1];
+                continue;
+            }
+
+            $padrao = "/10 - Nº do Protocolo/";
+            if (preg_match($padrao, $info)) {
+                $head[] = "11- Data do Protocolo";
+                $row[] = $infos[$key + 1];
+                continue;
+            }
+
+            $padrao = "/12 - Código da Glosa do Protocolo/";
+            if (preg_match($padrao, $info)) {                
+                $head[] = "8 - Código CNES";
+                $head[] = "12 - Código da Glosa do Protocolo";
+                $row[] = $infos[$key + 1];
+                $row[] = $infos[$key + 2];            
+                continue;
+            }           
+        }
+
+
+        $file = fopen("storage/file.csv", "w");
+        fputcsv($file, $head, ",");
+        fputcsv($file, $row, ",");
+        fclose($file);
+
+        return "Concluído";
     }
 }
